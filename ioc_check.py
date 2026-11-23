@@ -1,7 +1,7 @@
 # IOC check tool
-# Part 1: Takes IPs from ips.txt, checks them on AbuseIPDB and VirusTotal,
+# 1: Takes IPs from ips.txt, checks them on AbuseIPDB and VirusTotal,
 #         and saves the result in results.csv
-# Part 2: Takes file hashes from fim_iocs.txt (made by fim.py), checks them
+# 2: Takes file hashes from fim_iocs.txt (made by fim.py), checks them
 #         on VirusTotal, and saves the result in hash_results.csv
 
 # How to run:
@@ -49,7 +49,7 @@ def enrich(ip):
     # this also checks if the IP is valid (wrong IP gives ValueError)
     ip_obj = ipaddress.ip_address(ip)
 
-    # private IPs (10.x, 192.168.x) are not on internet, so no point checking
+    # private IPs (10.x, 192.168.x) are not on internet, so no need
     if ip_obj.is_private:
         return None
 
@@ -75,8 +75,8 @@ VT_FILE_URL = "https://www.virustotal.com/api/v3/files/"
 
 def read_hashes(filename):
     # fim_iocs.txt has lines like "SHA-256: <hash>"
-    # we take only SHA-256 lines, because MD5, SHA-1 and SHA-256 are of the same file
-    # and checking all three would waste VirusTotal requests
+    # it will take only SHA-256 lines, because MD5, SHA-1 and SHA-256 are of the same file and checking all three would waste VirusTotal requests
+     
     hashes = []
     with open(filename) as f:
         for line in f:
@@ -93,7 +93,7 @@ def check_vt_hash(file_hash):
     headers = {"x-apikey" : VT_KEY}
     r = requests.get(VT_FILE_URL + file_hash, headers=headers, timeout=10)
     if r.status_code == 404:
-        return None   # VirusTotal has never seen this file
+        return None   # because VirusTotal has never seen this file
     r.raise_for_status()
     return r.json()["data"]["attributes"]["last_analysis_stats"]
 
@@ -101,7 +101,7 @@ def enrich_hash(file_hash):
     stats = check_vt_hash(file_hash)
 
     if stats is None:
-        # not found does NOT mean the file is safe, it just means VirusTotal doesn't know it
+        # not found does NOT mean the file is safe, it just means VirusTotal doesn't know about it
         return [file_hash, "Not found", "", ""]
 
     # verdict is made from how many vendors said malicious
